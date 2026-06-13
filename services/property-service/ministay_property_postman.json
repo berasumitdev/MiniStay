@@ -1,0 +1,540 @@
+{
+  "info": {
+    "name": "MiniStay — Property Service",
+    "_postman_id": "property-service-v1",
+    "description": "Complete property service API collection. All requests go directly to port 8081. Test in this order: Health → Create rooms → Get/Filter → Update → Delete.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "BASE_URL", "value": "http://localhost:8081", "type": "string" },
+    { "key": "roomId", "value": "1", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "1. Health Check",
+      "item": [
+        {
+          "name": "Service Health (custom)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/property/health",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "property", "health"]
+            },
+            "description": "Custom health endpoint. Expected: { service, status: UP, timestamp }"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Service is UP', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.status).to.eql('UP');",
+                  "  pm.expect(json.service).to.eql('property-service');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actuator Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/actuator/health",
+              "host": ["{{BASE_URL}}"],
+              "path": ["actuator", "health"]
+            },
+            "description": "Spring Boot Actuator health. Expected: { status: UP, components: { db, diskSpace } }"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Create Rooms",
+      "item": [
+        {
+          "name": "Create Room 101 — Single",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{BASE_URL}}/api/property/rooms",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "property", "rooms"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roomNumber\": \"101\",\n  \"roomType\": \"SINGLE\",\n  \"floor\": 1,\n  \"pricePerNight\": 2500.00,\n  \"capacity\": 1,\n  \"description\": \"Cozy single room with garden view\"\n}"
+            },
+            "description": "Creates room 101. Save the returned id into the roomId variable."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('success true', () => pm.expect(pm.response.json().success).to.be.true);",
+                  "const id = pm.response.json().data?.id;",
+                  "if (id) pm.collectionVariables.set('roomId', id);",
+                  "pm.test('roomId saved: ' + id, () => pm.expect(id).to.be.a('number'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Room 102 — Single",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{BASE_URL}}/api/property/rooms",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "property", "rooms"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roomNumber\": \"102\",\n  \"roomType\": \"SINGLE\",\n  \"floor\": 1,\n  \"pricePerNight\": 2500.00,\n  \"capacity\": 1,\n  \"description\": \"Single room with city view\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Create Room 201 — Double",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{BASE_URL}}/api/property/rooms",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "property", "rooms"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roomNumber\": \"201\",\n  \"roomType\": \"DOUBLE\",\n  \"floor\": 2,\n  \"pricePerNight\": 4500.00,\n  \"capacity\": 2,\n  \"description\": \"Spacious double room with balcony\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Create Room 202 — Twin",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{BASE_URL}}/api/property/rooms",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "property", "rooms"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roomNumber\": \"202\",\n  \"roomType\": \"TWIN\",\n  \"floor\": 2,\n  \"pricePerNight\": 4000.00,\n  \"capacity\": 2,\n  \"description\": \"Twin room with two single beds\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Create Room 301 — Deluxe",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{BASE_URL}}/api/property/rooms",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "property", "rooms"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roomNumber\": \"301\",\n  \"roomType\": \"DELUXE\",\n  \"floor\": 3,\n  \"pricePerNight\": 7500.00,\n  \"capacity\": 2,\n  \"description\": \"Deluxe room with king bed and sitting area\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Create Room 302 — Deluxe (Maintenance)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{BASE_URL}}/api/property/rooms",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "property", "rooms"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roomNumber\": \"302\",\n  \"roomType\": \"DELUXE\",\n  \"floor\": 3,\n  \"pricePerNight\": 7500.00,\n  \"capacity\": 2,\n  \"status\": \"MAINTENANCE\",\n  \"description\": \"Under renovation\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Create Room 401 — Suite",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{BASE_URL}}/api/property/rooms",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "property", "rooms"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roomNumber\": \"401\",\n  \"roomType\": \"SUITE\",\n  \"floor\": 4,\n  \"pricePerNight\": 12000.00,\n  \"capacity\": 3,\n  \"description\": \"Luxury suite with panoramic view and living area\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Create Room 501 — Presidential",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{BASE_URL}}/api/property/rooms",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "property", "rooms"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roomNumber\": \"501\",\n  \"roomType\": \"PRESIDENTIAL\",\n  \"floor\": 5,\n  \"pricePerNight\": 25000.00,\n  \"capacity\": 4,\n  \"description\": \"Presidential suite with private pool and butler service\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Get Rooms",
+      "item": [
+        {
+          "name": "Get All Rooms",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/property/rooms",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "property", "rooms"]
+            },
+            "description": "Returns all rooms. Should show all 8 created above."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('success true', () => pm.expect(pm.response.json().success).to.be.true);",
+                  "pm.test('data is array', () => pm.expect(pm.response.json().data).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Room by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/property/rooms/{{roomId}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "property", "rooms", "{{roomId}}"]
+            },
+            "description": "Gets single room by id. roomId variable is auto-set from Create Room 101."
+          }
+        },
+        {
+          "name": "Get Available Rooms",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/property/rooms/available",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "property", "rooms", "available"]
+            },
+            "description": "Returns only AVAILABLE rooms. Room 302 (MAINTENANCE) should not appear here."
+          }
+        },
+        {
+          "name": "Get by Status — AVAILABLE",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/property/rooms/status/AVAILABLE",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "property", "rooms", "status", "AVAILABLE"]
+            }
+          }
+        },
+        {
+          "name": "Get by Status — MAINTENANCE",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/property/rooms/status/MAINTENANCE",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "property", "rooms", "status", "MAINTENANCE"]
+            },
+            "description": "Should return only room 302."
+          }
+        },
+        {
+          "name": "Get by Status — OCCUPIED",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/property/rooms/status/OCCUPIED",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "property", "rooms", "status", "OCCUPIED"]
+            },
+            "description": "Should return empty list initially."
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Update Rooms",
+      "item": [
+        {
+          "name": "Update Room (Full)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{BASE_URL}}/api/property/rooms/{{roomId}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "property", "rooms", "{{roomId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roomNumber\": \"101\",\n  \"roomType\": \"SINGLE\",\n  \"floor\": 1,\n  \"pricePerNight\": 3000.00,\n  \"capacity\": 1,\n  \"status\": \"AVAILABLE\",\n  \"description\": \"Updated — cozy single room with garden view, newly renovated\"\n}"
+            },
+            "description": "Full update of room. Changed pricePerNight from 2500 to 3000 and updated description."
+          }
+        },
+        {
+          "name": "Update Status → OCCUPIED",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/property/rooms/{{roomId}}/status?status=OCCUPIED",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "property", "rooms", "{{roomId}}", "status"],
+              "query": [{ "key": "status", "value": "OCCUPIED" }]
+            },
+            "description": "Mark room as occupied. Used when a guest checks in."
+          }
+        },
+        {
+          "name": "Update Status → AVAILABLE",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/property/rooms/{{roomId}}/status?status=AVAILABLE",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "property", "rooms", "{{roomId}}", "status"],
+              "query": [{ "key": "status", "value": "AVAILABLE" }]
+            },
+            "description": "Mark room available again after checkout."
+          }
+        },
+        {
+          "name": "Update Status → MAINTENANCE",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/property/rooms/{{roomId}}/status?status=MAINTENANCE",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "property", "rooms", "{{roomId}}", "status"],
+              "query": [{ "key": "status", "value": "MAINTENANCE" }]
+            }
+          }
+        },
+        {
+          "name": "Update Status → RESERVED",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/property/rooms/{{roomId}}/status?status=RESERVED",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "property", "rooms", "{{roomId}}", "status"],
+              "query": [{ "key": "status", "value": "RESERVED" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Delete Room",
+      "item": [
+        {
+          "name": "Delete Room by ID",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/property/rooms/{{roomId}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "property", "rooms", "{{roomId}}"]
+            },
+            "description": "Deletes the room. Verify with Get All Rooms after."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('success true', () => pm.expect(pm.response.json().success).to.be.true);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6. Error Cases",
+      "item": [
+        {
+          "name": "ERROR — Get Non-existent Room (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/property/rooms/99999",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "property", "rooms", "99999"]
+            },
+            "description": "Expected: 404 with { success: false, error: 'Room not found with id: 99999' }"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));",
+                  "pm.test('success false', () => pm.expect(pm.response.json().success).to.be.false);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "ERROR — Create Duplicate Room Number (409)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{BASE_URL}}/api/property/rooms",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "property", "rooms"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roomNumber\": \"201\",\n  \"roomType\": \"DOUBLE\",\n  \"floor\": 2,\n  \"pricePerNight\": 4500.00\n}"
+            },
+            "description": "Room 201 already exists. Expected: 409 CONFLICT with duplicate error message."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('success false', () => pm.expect(pm.response.json().success).to.be.false);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "ERROR — Missing Required Fields (400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{BASE_URL}}/api/property/rooms",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "property", "rooms"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roomNumber\": \"999\"\n}"
+            },
+            "description": "Missing roomType, floor, pricePerNight. Expected: 400 with validation error map showing which fields failed."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('error is Validation failed', () => pm.expect(pm.response.json().error).to.eql('Validation failed'));",
+                  "pm.test('data has field errors', () => pm.expect(pm.response.json().data).to.be.an('object'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "ERROR — Invalid Price (400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{BASE_URL}}/api/property/rooms",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "property", "rooms"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roomNumber\": \"999\",\n  \"roomType\": \"SINGLE\",\n  \"floor\": 1,\n  \"pricePerNight\": -100.00\n}"
+            },
+            "description": "Negative price. Expected: 400 validation error on pricePerNight."
+          }
+        },
+        {
+          "name": "ERROR — Invalid Floor (400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{BASE_URL}}/api/property/rooms",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "property", "rooms"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roomNumber\": \"999\",\n  \"roomType\": \"SINGLE\",\n  \"floor\": 0,\n  \"pricePerNight\": 2500.00\n}"
+            },
+            "description": "Floor 0 is invalid, must be at least 1. Expected: 400 validation error on floor."
+          }
+        },
+        {
+          "name": "ERROR — Delete Non-existent Room (404)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/property/rooms/99999",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "property", "rooms", "99999"]
+            },
+            "description": "Expected: 404 with error message."
+          }
+        }
+      ]
+    }
+  ]
+}

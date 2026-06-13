@@ -1,0 +1,286 @@
+{
+  "info": {
+    "name": "MiniStay — Guest Service",
+    "_postman_id": "guest-service-v1",
+    "description": "Complete guest service API collection. Direct to port 8083. Run folders in order: Health -> Register -> Get/Search -> Update -> Delete -> Errors. Register Guest auto-saves the returned id into guestId.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "BASE_URL", "value": "http://localhost:8083", "type": "string" },
+    { "key": "guestId", "value": "1", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "1. Health Check",
+      "item": [
+        {
+          "name": "Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{BASE_URL}}/api/guest/health", "host": ["{{BASE_URL}}"], "path": ["api","guest","health"] }
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Service UP', () => pm.expect(pm.response.json().status).to.eql('UP'));"
+          ]}}]
+        },
+        {
+          "name": "Actuator Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{BASE_URL}}/actuator/health", "host": ["{{BASE_URL}}"], "path": ["actuator","health"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Register Guests",
+      "item": [
+        {
+          "name": "Register Guest 1 — Sumit",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/guest/guests", "host": ["{{BASE_URL}}"], "path": ["api","guest","guests"] },
+            "body": { "mode": "raw", "raw": "{\n  \"firstName\": \"Sumit\",\n  \"lastName\": \"Sharma\",\n  \"email\": \"sumit.sharma@email.com\",\n  \"phone\": \"+91-9876543210\",\n  \"idProofType\": \"AADHAR\",\n  \"idProofNumber\": \"1234-5678-9012\",\n  \"dateOfBirth\": \"1998-05-15\",\n  \"nationality\": \"Indian\",\n  \"address\": \"Salt Lake, Kolkata, West Bengal\"\n}" },
+            "description": "Full guest registration. Saves guestId for later requests."
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 201', () => pm.response.to.have.status(201));",
+            "pm.test('success true', () => pm.expect(pm.response.json().success).to.be.true);",
+            "const id = pm.response.json().data?.id;",
+            "if (id) pm.collectionVariables.set('guestId', id);",
+            "pm.test('guestId saved: ' + id, () => pm.expect(id).to.be.a('number'));"
+          ]}}]
+        },
+        {
+          "name": "Register Guest 2 — Priya",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/guest/guests", "host": ["{{BASE_URL}}"], "path": ["api","guest","guests"] },
+            "body": { "mode": "raw", "raw": "{\n  \"firstName\": \"Priya\",\n  \"lastName\": \"Patel\",\n  \"email\": \"priya.patel@email.com\",\n  \"phone\": \"+91-9123456789\",\n  \"idProofType\": \"PASSPORT\",\n  \"idProofNumber\": \"P1234567\",\n  \"dateOfBirth\": \"1995-11-22\",\n  \"nationality\": \"Indian\",\n  \"address\": \"Bandra, Mumbai, Maharashtra\"\n}" }
+          }
+        },
+        {
+          "name": "Register Guest 3 — John (foreign)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/guest/guests", "host": ["{{BASE_URL}}"], "path": ["api","guest","guests"] },
+            "body": { "mode": "raw", "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Smith\",\n  \"email\": \"john.smith@email.com\",\n  \"phone\": \"+1-555-0142\",\n  \"idProofType\": \"PASSPORT\",\n  \"idProofNumber\": \"US9988776\",\n  \"dateOfBirth\": \"1988-03-10\",\n  \"nationality\": \"American\",\n  \"address\": \"123 Main St, New York, USA\"\n}" }
+          }
+        },
+        {
+          "name": "Register Guest 4 — Minimal (only required fields)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/guest/guests", "host": ["{{BASE_URL}}"], "path": ["api","guest","guests"] },
+            "body": { "mode": "raw", "raw": "{\n  \"firstName\": \"Anita\",\n  \"lastName\": \"Desai\",\n  \"email\": \"anita.desai@email.com\",\n  \"phone\": \"+91-9988001122\"\n}" },
+            "description": "Only the 4 required fields. ID proof, DOB, etc. omitted. Valid registration."
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Get & Search Guests",
+      "item": [
+        {
+          "name": "Get All Guests",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{BASE_URL}}/api/guest/guests", "host": ["{{BASE_URL}}"], "path": ["api","guest","guests"] }
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('data is array', () => pm.expect(pm.response.json().data).to.be.an('array'));"
+          ]}}]
+        },
+        {
+          "name": "Get Guest by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{BASE_URL}}/api/guest/guests/{{guestId}}", "host": ["{{BASE_URL}}"], "path": ["api","guest","guests","{{guestId}}"] }
+          }
+        },
+        {
+          "name": "Get Guest by Email",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{BASE_URL}}/api/guest/guests/email/sumit.sharma@email.com", "host": ["{{BASE_URL}}"], "path": ["api","guest","guests","email","sumit.sharma@email.com"] }
+          }
+        },
+        {
+          "name": "Search by Name — sumit",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/guest/guests/search?name=sumit",
+              "host": ["{{BASE_URL}}"], "path": ["api","guest","guests","search"],
+              "query": [{ "key": "name", "value": "sumit" }]
+            },
+            "description": "Case-insensitive search on first or last name."
+          }
+        },
+        {
+          "name": "Search by Name — patel",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/guest/guests/search?name=patel",
+              "host": ["{{BASE_URL}}"], "path": ["api","guest","guests","search"],
+              "query": [{ "key": "name", "value": "patel" }]
+            },
+            "description": "Should match Priya Patel (last name)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Update Guests",
+      "item": [
+        {
+          "name": "Update Guest (Full)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/guest/guests/{{guestId}}", "host": ["{{BASE_URL}}"], "path": ["api","guest","guests","{{guestId}}"] },
+            "body": { "mode": "raw", "raw": "{\n  \"firstName\": \"Sumit\",\n  \"lastName\": \"Sharma\",\n  \"email\": \"sumit.sharma@email.com\",\n  \"phone\": \"+91-9876500000\",\n  \"idProofType\": \"AADHAR\",\n  \"idProofNumber\": \"1234-5678-9012\",\n  \"nationality\": \"Indian\",\n  \"address\": \"New Town, Kolkata, West Bengal\"\n}" },
+            "description": "Updated phone and address."
+          }
+        },
+        {
+          "name": "Update Status → INACTIVE",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/guest/guests/{{guestId}}/status?status=INACTIVE",
+              "host": ["{{BASE_URL}}"], "path": ["api","guest","guests","{{guestId}}","status"],
+              "query": [{ "key": "status", "value": "INACTIVE" }]
+            }
+          }
+        },
+        {
+          "name": "Update Status → ACTIVE",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/guest/guests/{{guestId}}/status?status=ACTIVE",
+              "host": ["{{BASE_URL}}"], "path": ["api","guest","guests","{{guestId}}","status"],
+              "query": [{ "key": "status", "value": "ACTIVE" }]
+            }
+          }
+        },
+        {
+          "name": "Update Status → BLACKLISTED",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/guest/guests/{{guestId}}/status?status=BLACKLISTED",
+              "host": ["{{BASE_URL}}"], "path": ["api","guest","guests","{{guestId}}","status"],
+              "query": [{ "key": "status", "value": "BLACKLISTED" }]
+            },
+            "description": "Mark guest as blacklisted (e.g. for repeated no-shows or damage)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Delete Guest",
+      "item": [
+        {
+          "name": "Delete Guest by ID",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{BASE_URL}}/api/guest/guests/{{guestId}}", "host": ["{{BASE_URL}}"], "path": ["api","guest","guests","{{guestId}}"] }
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('success true', () => pm.expect(pm.response.json().success).to.be.true);"
+          ]}}]
+        }
+      ]
+    },
+    {
+      "name": "6. Error Cases",
+      "item": [
+        {
+          "name": "ERROR — Duplicate Email (409)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/guest/guests", "host": ["{{BASE_URL}}"], "path": ["api","guest","guests"] },
+            "body": { "mode": "raw", "raw": "{\n  \"firstName\": \"Another\",\n  \"lastName\": \"Person\",\n  \"email\": \"priya.patel@email.com\",\n  \"phone\": \"+91-9000000000\"\n}" },
+            "description": "Email priya.patel@email.com already registered. Expected: 409 CONFLICT."
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 409', () => pm.response.to.have.status(409));"
+          ]}}]
+        },
+        {
+          "name": "ERROR — Invalid Email Format (400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/guest/guests", "host": ["{{BASE_URL}}"], "path": ["api","guest","guests"] },
+            "body": { "mode": "raw", "raw": "{\n  \"firstName\": \"Bad\",\n  \"lastName\": \"Email\",\n  \"email\": \"not-an-email\",\n  \"phone\": \"+91-9000000001\"\n}" },
+            "description": "Email is malformed. Expected: 400 with validation error on email field."
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 400', () => pm.response.to.have.status(400));",
+            "pm.test('error Validation failed', () => pm.expect(pm.response.json().error).to.eql('Validation failed'));"
+          ]}}]
+        },
+        {
+          "name": "ERROR — Missing Required Fields (400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/guest/guests", "host": ["{{BASE_URL}}"], "path": ["api","guest","guests"] },
+            "body": { "mode": "raw", "raw": "{\n  \"firstName\": \"OnlyFirst\"\n}" },
+            "description": "Missing lastName, email, phone. Expected: 400 with field error map."
+          }
+        },
+        {
+          "name": "ERROR — Get Non-existent Guest (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{BASE_URL}}/api/guest/guests/99999", "host": ["{{BASE_URL}}"], "path": ["api","guest","guests","99999"] }
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 404', () => pm.response.to.have.status(404));"
+          ]}}]
+        },
+        {
+          "name": "ERROR — Get by Non-existent Email (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{BASE_URL}}/api/guest/guests/email/nobody@nowhere.com", "host": ["{{BASE_URL}}"], "path": ["api","guest","guests","email","nobody@nowhere.com"] }
+          }
+        },
+        {
+          "name": "ERROR — Delete Non-existent Guest (404)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{BASE_URL}}/api/guest/guests/99999", "host": ["{{BASE_URL}}"], "path": ["api","guest","guests","99999"] }
+          }
+        }
+      ]
+    }
+  ]
+}

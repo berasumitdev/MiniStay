@@ -1,0 +1,303 @@
+{
+  "info": {
+    "name": "MiniStay — Booking Service",
+    "_postman_id": "booking-service-v1",
+    "description": "Complete booking service API collection. Direct to port 8082. Run folders in order: Health -> Availability -> Create -> Get/Filter -> Lifecycle -> Errors. The Create Booking request auto-saves the returned id into bookingId.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "BASE_URL", "value": "http://localhost:8082", "type": "string" },
+    { "key": "bookingId", "value": "1", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "1. Health Check",
+      "item": [
+        {
+          "name": "Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{BASE_URL}}/api/booking/health", "host": ["{{BASE_URL}}"], "path": ["api","booking","health"] },
+            "description": "Expected: { service: booking-service, status: UP, timestamp }"
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Service UP', () => pm.expect(pm.response.json().status).to.eql('UP'));"
+          ]}}]
+        },
+        {
+          "name": "Actuator Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{BASE_URL}}/actuator/health", "host": ["{{BASE_URL}}"], "path": ["actuator","health"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Check Availability",
+      "item": [
+        {
+          "name": "Check Room 1 — Available (before booking)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/booking/bookings/availability?roomId=1&checkIn=2026-07-01&checkOut=2026-07-05",
+              "host": ["{{BASE_URL}}"], "path": ["api","booking","bookings","availability"],
+              "query": [
+                { "key": "roomId", "value": "1" },
+                { "key": "checkIn", "value": "2026-07-01" },
+                { "key": "checkOut", "value": "2026-07-05" }
+              ]
+            },
+            "description": "Before any booking exists, should return available: true"
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('available is boolean', () => pm.expect(pm.response.json().data.available).to.be.a('boolean'));"
+          ]}}]
+        }
+      ]
+    },
+    {
+      "name": "3. Create Bookings",
+      "item": [
+        {
+          "name": "Create Booking — Room 1 (Jul 1-5)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/booking/bookings", "host": ["{{BASE_URL}}"], "path": ["api","booking","bookings"] },
+            "body": { "mode": "raw", "raw": "{\n  \"guestId\": 1,\n  \"roomId\": 1,\n  \"checkIn\": \"2026-07-01\",\n  \"checkOut\": \"2026-07-05\",\n  \"numberOfGuests\": 2,\n  \"pricePerNight\": 2500.00,\n  \"specialRequests\": \"Early check-in requested, non-smoking room\"\n}" },
+            "description": "4 nights x 2500 = totalAmount 10000. Saves bookingId for later requests."
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 201', () => pm.response.to.have.status(201));",
+            "pm.test('success true', () => pm.expect(pm.response.json().success).to.be.true);",
+            "const data = pm.response.json().data;",
+            "if (data?.id) pm.collectionVariables.set('bookingId', data.id);",
+            "pm.test('totalAmount = 10000', () => pm.expect(Number(data.totalAmount)).to.eql(10000));",
+            "pm.test('numberOfNights = 4', () => pm.expect(data.numberOfNights).to.eql(4));",
+            "pm.test('has booking reference', () => pm.expect(data.bookingReference).to.include('BK-'));"
+          ]}}]
+        },
+        {
+          "name": "Create Booking — Room 2 (Jul 10-12)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/booking/bookings", "host": ["{{BASE_URL}}"], "path": ["api","booking","bookings"] },
+            "body": { "mode": "raw", "raw": "{\n  \"guestId\": 2,\n  \"roomId\": 2,\n  \"checkIn\": \"2026-07-10\",\n  \"checkOut\": \"2026-07-12\",\n  \"numberOfGuests\": 1,\n  \"pricePerNight\": 4500.00,\n  \"specialRequests\": \"Late checkout if possible\"\n}" },
+            "description": "2 nights x 4500 = 9000"
+          }
+        },
+        {
+          "name": "Create Booking — Room 3 (Jul 15-20)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/booking/bookings", "host": ["{{BASE_URL}}"], "path": ["api","booking","bookings"] },
+            "body": { "mode": "raw", "raw": "{\n  \"guestId\": 1,\n  \"roomId\": 3,\n  \"checkIn\": \"2026-07-15\",\n  \"checkOut\": \"2026-07-20\",\n  \"numberOfGuests\": 2,\n  \"pricePerNight\": 7500.00\n}" },
+            "description": "Same guest (1) booking a second room. 5 nights x 7500 = 37500"
+          }
+        },
+        {
+          "name": "Create Booking — No price (totalAmount null)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/booking/bookings", "host": ["{{BASE_URL}}"], "path": ["api","booking","bookings"] },
+            "body": { "mode": "raw", "raw": "{\n  \"guestId\": 3,\n  \"roomId\": 4,\n  \"checkIn\": \"2026-08-01\",\n  \"checkOut\": \"2026-08-03\",\n  \"numberOfGuests\": 2\n}" },
+            "description": "pricePerNight omitted -> totalAmount will be null. Valid booking."
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Get Bookings",
+      "item": [
+        {
+          "name": "Get All Bookings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{BASE_URL}}/api/booking/bookings", "host": ["{{BASE_URL}}"], "path": ["api","booking","bookings"] }
+          }
+        },
+        {
+          "name": "Get Booking by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{BASE_URL}}/api/booking/bookings/{{bookingId}}", "host": ["{{BASE_URL}}"], "path": ["api","booking","bookings","{{bookingId}}"] }
+          }
+        },
+        {
+          "name": "Get Bookings by Guest (1)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{BASE_URL}}/api/booking/bookings/guest/1", "host": ["{{BASE_URL}}"], "path": ["api","booking","bookings","guest","1"] },
+            "description": "Guest 1 has 2 bookings (room 1 and room 3)."
+          }
+        },
+        {
+          "name": "Get Bookings by Room (1)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{BASE_URL}}/api/booking/bookings/room/1", "host": ["{{BASE_URL}}"], "path": ["api","booking","bookings","room","1"] }
+          }
+        },
+        {
+          "name": "Get by Status — CONFIRMED",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{BASE_URL}}/api/booking/bookings/status/CONFIRMED", "host": ["{{BASE_URL}}"], "path": ["api","booking","bookings","status","CONFIRMED"] }
+          }
+        },
+        {
+          "name": "Today's Check-ins",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{BASE_URL}}/api/booking/bookings/today/checkins", "host": ["{{BASE_URL}}"], "path": ["api","booking","bookings","today","checkins"] }
+          }
+        },
+        {
+          "name": "Today's Check-outs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{BASE_URL}}/api/booking/bookings/today/checkouts", "host": ["{{BASE_URL}}"], "path": ["api","booking","bookings","today","checkouts"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Booking Lifecycle",
+      "item": [
+        {
+          "name": "Check-in Guest",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": { "raw": "{{BASE_URL}}/api/booking/bookings/{{bookingId}}/checkin", "host": ["{{BASE_URL}}"], "path": ["api","booking","bookings","{{bookingId}}","checkin"] },
+            "description": "CONFIRMED -> CHECKED_IN. Run this first."
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('status CHECKED_IN', () => pm.expect(pm.response.json().data.status).to.eql('CHECKED_IN'));"
+          ]}}]
+        },
+        {
+          "name": "Check-out Guest",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": { "raw": "{{BASE_URL}}/api/booking/bookings/{{bookingId}}/checkout", "host": ["{{BASE_URL}}"], "path": ["api","booking","bookings","{{bookingId}}","checkout"] },
+            "description": "CHECKED_IN -> CHECKED_OUT. Run after check-in."
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('status CHECKED_OUT', () => pm.expect(pm.response.json().data.status).to.eql('CHECKED_OUT'));"
+          ]}}]
+        },
+        {
+          "name": "Cancel Booking (use a different id)",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": { "raw": "{{BASE_URL}}/api/booking/bookings/2/cancel", "host": ["{{BASE_URL}}"], "path": ["api","booking","bookings","2","cancel"] },
+            "description": "CONFIRMED -> CANCELLED. Cancels booking id 2."
+          }
+        },
+        {
+          "name": "Mark NO_SHOW (use a different id)",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/booking/bookings/3/status?status=NO_SHOW",
+              "host": ["{{BASE_URL}}"], "path": ["api","booking","bookings","3","status"],
+              "query": [{ "key": "status", "value": "NO_SHOW" }]
+            },
+            "description": "CONFIRMED -> NO_SHOW for booking id 3."
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Error Cases",
+      "item": [
+        {
+          "name": "ERROR — Double Booking Conflict (409)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/booking/bookings", "host": ["{{BASE_URL}}"], "path": ["api","booking","bookings"] },
+            "body": { "mode": "raw", "raw": "{\n  \"guestId\": 5,\n  \"roomId\": 1,\n  \"checkIn\": \"2026-07-03\",\n  \"checkOut\": \"2026-07-07\",\n  \"numberOfGuests\": 1,\n  \"pricePerNight\": 2500.00\n}" },
+            "description": "Room 1 already booked Jul 1-5. This overlaps (Jul 3-7). Expected: 409 CONFLICT. NOTE: only fails if booking id 1 is still CONFIRMED/CHECKED_IN. If you checked it out in folder 5, it won't conflict."
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 409', () => pm.response.to.have.status(409));"
+          ]}}]
+        },
+        {
+          "name": "ERROR — Checkout before Checkin (400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/booking/bookings", "host": ["{{BASE_URL}}"], "path": ["api","booking","bookings"] },
+            "body": { "mode": "raw", "raw": "{\n  \"guestId\": 1,\n  \"roomId\": 9,\n  \"checkIn\": \"2026-07-10\",\n  \"checkOut\": \"2026-07-05\"\n}" },
+            "description": "checkOut is before checkIn. Expected: 400 (validation or InvalidBookingException)."
+          }
+        },
+        {
+          "name": "ERROR — Missing Required Fields (400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/booking/bookings", "host": ["{{BASE_URL}}"], "path": ["api","booking","bookings"] },
+            "body": { "mode": "raw", "raw": "{\n  \"guestId\": 1\n}" },
+            "description": "Missing roomId, checkIn, checkOut. Expected: 400 with field error map."
+          }
+        },
+        {
+          "name": "ERROR — Past Check-in Date (400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/booking/bookings", "host": ["{{BASE_URL}}"], "path": ["api","booking","bookings"] },
+            "body": { "mode": "raw", "raw": "{\n  \"guestId\": 1,\n  \"roomId\": 9,\n  \"checkIn\": \"2020-01-01\",\n  \"checkOut\": \"2020-01-05\"\n}" },
+            "description": "Check-in in the past. Expected: 400 (FutureOrPresent validation)."
+          }
+        },
+        {
+          "name": "ERROR — Invalid Status Transition (400)",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/booking/bookings/2/checkout",
+              "host": ["{{BASE_URL}}"], "path": ["api","booking","bookings","2","checkout"]
+            },
+            "description": "Booking 2 was cancelled. Cannot check out a cancelled booking. Expected: 400."
+          }
+        },
+        {
+          "name": "ERROR — Get Non-existent Booking (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{BASE_URL}}/api/booking/bookings/99999", "host": ["{{BASE_URL}}"], "path": ["api","booking","bookings","99999"] }
+          }
+        }
+      ]
+    }
+  ]
+}
