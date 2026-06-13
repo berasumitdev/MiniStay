@@ -28,7 +28,7 @@ export default function DashboardPage() {
         href="/dashboard/rooms"
         className="text-blue-600 text-sm hover:underline"
       >
-        Manage rooms →
+        Manage rooms
       </Link>
     </div>
   );

@@ -1,3 +1,4 @@
+// PROPERTY
 export interface ApiResponse<T> {
   success: boolean;
   message?: string;
@@ -48,4 +49,84 @@ export interface RoomRequest {
   status?: RoomStatus;
   description?: string;
   capacity?: number;
+}
+
+// GUEST
+
+export type IdProofType =
+  | "PASSPORT"
+  | "AADHAR"
+  | "PAN"
+  | "DRIVING_LICENSE"
+  | "VOTER_ID";
+export type GuestStatus = "ACTIVE" | "INACTIVE" | "BLACKLISTED";
+
+export interface Guest {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  idProofType?: IdProofType;
+  idProofNumber?: string;
+  dateOfBirth?: string;
+  nationality?: string;
+  address?: string;
+  status: GuestStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GuestRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  idProofType?: IdProofType;
+  idProofNumber?: string;
+  dateOfBirth?: string;
+  nationality?: string;
+  address?: string;
+}
+
+// BOOKING
+
+export type BookingStatus =
+  | "CONFIRMED"
+  | "CHECKED_IN"
+  | "CHECKED_OUT"
+  | "CANCELLED"
+  | "NO_SHOW";
+
+export interface Booking {
+  id: number;
+  guestId: number;
+  roomId: number;
+  checkIn: string;
+  checkOut: string;
+  status: BookingStatus;
+  totalAmount?: number;
+  numberOfGuests: number;
+  specialRequests?: string;
+  bookingReference?: string;
+  numberOfNights: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BookingRequest {
+  guestId: number;
+  roomId: number;
+  checkIn: string;
+  checkOut: string;
+  numberOfGuests?: number;
+  specialRequests?: string;
+  pricePerNight?: number;
+}
+
+export interface AvailabilityResult {
+  roomId: number;
+  checkIn: string;
+  checkOut: string;
+  available: boolean;
 }

@@ -1,10 +1,9 @@
 # MiniStay (Hotel PMS MVP)
 
-Personal POC project for a microservices-based hotel management system. Built to get familiar with a Next.js client + Spring Boot microservice backend architecture.
+Personal POC project for a microservices-based hotel management system. Built to get familiar with a **Next.js** client, **PostgreSQL** and **Spring Boot** microservice backend architecture.
 
-property > booking > guest > gateway
 
-Run
+**Run Services**
 ```
 npx concurrently -c "cyan,green,blue,magenta" -n "GATEWAY,PROPERTY,BOOKING,GUEST" \
 "cd services/api-gateway && ./mvnw spring-boot:run" \
@@ -35,3 +34,5 @@ curl https://start.spring.io/starter.tgz -d type=maven-project -d language=java 
 ```
 docker exec -it property-db psql -U postgres -d property_db
 ```
+
+@berasumitdev

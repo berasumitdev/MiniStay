@@ -9,6 +9,8 @@ import { Badge, Button } from "@/components/ui";
 const navItems = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/dashboard/rooms", label: "Rooms" },
+  { href: "/dashboard/guests", label: "Guests" },
+  { href: "/dashboard/bookings", label: "Bookings" },
 ];
 
 export default function DashboardLayout({
