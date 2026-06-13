@@ -19,3 +19,8 @@ curl https://start.spring.io/starter.tgz -d type=maven-project -d language=java 
 ```
 curl https://start.spring.io/starter.tgz -d type=maven-project -d language=java -d baseDir=guest-service -d groupId=com.ministay -d artifactId=guest-service -d name=guest-service -d javaVersion=21 -d dependencies=web,data-jpa,postgresql,actuator,lombok,validation | tar -xzvf -
 ```
+
+- Connect to the running container's postgres
+```
+docker exec -it property-db psql -U postgres -d property_db
+```
