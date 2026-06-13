@@ -39,3 +39,9 @@ management:
   endpoint:
     health:
       show-details: always
+logging:
+  level:
+    '[org.springframework.cloud.gateway]': DEBUG
+    '[org.springframework.web]': DEBUG
+    '[reactor.netty.http.server]': DEBUG
+    '[reactor.netty.http.client]': DEBUG
