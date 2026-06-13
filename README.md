@@ -2,6 +2,8 @@
 
 Personal POC project for a microservices-based hotel management system. Built to get familiar with a **Next.js** client, **PostgreSQL** and **Spring Boot** microservice backend architecture.
 
+![alt text](hld.png)
+
 
 **Run Services**
 ```
@@ -35,4 +37,3 @@ curl https://start.spring.io/starter.tgz -d type=maven-project -d language=java 
 docker exec -it property-db psql -U postgres -d property_db
 ```
 
-@berasumitdev
