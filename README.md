@@ -2,6 +2,8 @@
 
 Personal POC project for a microservices-based hotel management system. Built to get familiar with a Next.js client + Spring Boot microservice backend architecture.
 
+property > booking > guest > gateway
+
 
 -  Generate API Gateway
 ```
