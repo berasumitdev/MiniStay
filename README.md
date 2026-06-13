@@ -5,6 +5,8 @@ Personal POC project for a microservices-based hotel management system. Built to
 property > booking > guest > gateway
 
 
+
+
 -  Generate API Gateway
 ```
 curl https://start.spring.io/starter.tgz -d type=maven-project -d language=java -d baseDir=api-gateway -d groupId=com.ministay -d artifactId=api-gateway -d name=api-gateway -d javaVersion=21 -d dependencies=cloud-gateway,actuator | tar -xzvf -
