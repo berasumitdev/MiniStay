@@ -2,7 +2,10 @@
 
 Personal POC project for a microservices-based hotel management system. Built to get familiar with a **Next.js** client, **PostgreSQL** and **Spring Boot** microservice backend architecture.
 
-![alt text](hld.png)
+**Phase1**
+![alt text](hld1.png)
+**Phase2 - Scaling up the server**
+![alt text](hld2.png)
 
 
 **Run Services**
